@@ -1,53 +1,54 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import LinearProgress from '@mui/material/LinearProgress';
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { app } from '../../firebaseConfig'; // Ensure you are importing 'app' correctly
 
 const Login = () => {
-
+    const auth = getAuth(app);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(""); // State to hold error messages
 
-
-    const handleEmail = (e) =>{
-        e.preventDefault();
+    const handleEmail = (e) => {
         setEmail(e.target.value);
-    }
+    };
 
-    const handlePassword = (e) =>{
-        e.preventDefault();
+    const handlePassword = (e) => {
         setPassword(e.target.value);
-    }
+    };
 
-    const handleSubmit = (e) =>{
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
         setLoading(true);
+        setError(""); // Reset error state
 
-        
-
-        console.log(email);
-        console.log(password);
-
-        setTimeout(() => {
-            setLoading(false); // Set loading to false after delay
-        }, 2000); // 2000ms = 2 seconds
-    }
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            console.log('User logged in:', email);
+            // You can redirect or perform further actions after login
+        } catch (err) {
+            setError(err.message); // Set error message to state
+            console.error(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <Box
             sx={{
                 backgroundColor: 'primary.main',
                 display: 'flex',
-                flexDirection: 'column',    // Arrange items vertically
+                flexDirection: 'column',
                 minHeight: '100vh',
-                justifyContent: 'top',   // Center items vertically
-                alignItems: 'center',       // Center items horizontally
-                textAlign: 'center',        // Center the text itself
+                justifyContent: 'top',
+                alignItems: 'center',
+                textAlign: 'center',
             }}
-        
         >
             <Container
                 sx={{
@@ -56,9 +57,7 @@ const Login = () => {
                     alignItems: 'center',
                 }}
             >
-                
                 <Box
-                
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -73,51 +72,48 @@ const Login = () => {
                         maxWidth: '500px',
                         boxShadow: 24,
                         borderRadius: '10px'
-                       
-                            
                     }}
-                
                 >
-                    <form onSubmit={handleSubmit} style={{width:'100%'}}>
+                    <form onSubmit={handleSubmit} style={{ width: '100%' }}>
                         <Stack spacing={2} sx={{ width: '100%', maxWidth: '500px' }}>
                             <Typography marginTop="5px" variant="h6" gutterBottom>
                                 Login
                             </Typography>
 
-                            <TextField  required label="email" variant="filled" value={email} autoComplete='email' onChange={handleEmail} fullWidth/>
-                            <TextField 
+                            <TextField
                                 required
-                                label="password" 
-                                variant="filled" 
-                                type="password" 
-                                autoComplete='password'
-                                value={password} 
-                                onChange={handlePassword} 
+                                label="Email"
+                                variant="filled"
+                                value={email}
+                                autoComplete='email'
+                                onChange={handleEmail}
                                 fullWidth
                             />
-                            
+                            <TextField
+                                required
+                                label="Password"
+                                variant="filled"
+                                type="password"
+                                autoComplete='current-password'
+                                value={password}
+                                onChange={handlePassword}
+                                fullWidth
+                            />
+                            {error && <Typography color="error">Invalid user name or password</Typography>} {/* Display error message */}
 
-                            {loading ? 
-                                (
+                            {loading ? (
                                 <LinearProgress style={{ borderRadius: '0 0 4px 4px' }} />
-                                ):(
-                                <Button variant="contained" type="submit">Sign in</Button>
-                                )
-                            }
-                            
-
-
+                            ) : (
+                                <Button variant="contained" type="submit">
+                                    Sign in
+                                </Button>
+                            )}
                         </Stack>
                     </form>
-                    
                 </Box>
-
             </Container>
-
-
-
         </Box>
-    )
-}
+    );
+};
 
 export default Login;
