@@ -3,13 +3,19 @@ import { Box, Container, Typography, TextField, Button } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import LinearProgress from '@mui/material/LinearProgress';
 
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { app } from '../../firebaseConfig'; // Ensure you are importing 'app' correctly
+
 const Signup = () => {
 
+    const auth = getAuth(app);
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(""); // State to hold error messages
+
 
     const handleFirstName = (e) => {
         setFirstName(e.target.value);
@@ -28,21 +34,20 @@ const Signup = () => {
     }
 
     // Prevent the form from refreshing the page
-    const handleSignUp = (e) => {
+    const handleSignUp = async (e) => {
 
         e.preventDefault();  // Prevents page reload
-
         setLoading(true);
-        console.log("First Name:", firstName);
-        console.log("Last Name:", lastName);
-        console.log("Email:", email);
-        console.log("Password:", password);
 
-        setTimeout(() => {
-            setLoading(false); // Set loading to false after delay
-        }, 2000); // 2000ms = 2 seconds
-
-
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+            console.log('User created successfully:', email);
+        } catch (err) {
+            setError(err.message);
+            console.error(err.message);
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
@@ -70,7 +75,7 @@ const Signup = () => {
                 }}
             >
                 <Typography marginTop="5px" variant="h6" gutterBottom>
-                Signup
+                    Signup
                 </Typography>
 
                 {/* Form Submission Handler */}
@@ -121,6 +126,9 @@ const Signup = () => {
                         fullWidth
                         autoComplete="new-password"
                     />
+
+                    {error && <Typography color="error">{error}</Typography>} {/* Display error message */}
+
                     {loading ? 
                         (
                         <LinearProgress style={{ borderRadius: '0 0 4px 4px' }} />
