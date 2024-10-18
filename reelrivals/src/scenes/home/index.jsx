@@ -24,7 +24,7 @@ function Home() {
             Friendly fishing tournament app used for friends and family.
         </Typography>
       
-      <Signup />
+        <Signup />
     </Box>
   );
 }
