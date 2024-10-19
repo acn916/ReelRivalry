@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import LinearProgress from '@mui/material/LinearProgress';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { app } from '../../firebaseConfig'; // Ensure you are importing 'app' correctly
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const auth = getAuth(app);
@@ -12,24 +13,41 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(""); // State to hold error messages
+    const [inputRequired, setInputRequired] = useState("");
+    const navigate = useNavigate();
 
     const handleEmail = (e) => {
-        setEmail(e.target.value);
+
+        const get_email = e.target.value;
+        setEmail(get_email);
     };
 
     const handlePassword = (e) => {
-        setPassword(e.target.value);
+        const get_password = e.target.value;
+        setPassword(get_password);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if(!email){
+            setInputRequired("Please enter a email");
+            return;
+        }
+        else if(!password){
+            setInputRequired("Please enter a password");
+            return;
+        }
+
+
         setLoading(true);
         setError(""); // Reset error state
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
             console.log('User logged in:', email);
-            // You can redirect or perform further actions after login
+            navigate('/dashboard')
+            
         } catch (err) {
             setError(err.message); // Set error message to state
             console.error(err.message);
@@ -74,6 +92,7 @@ const Login = () => {
                         borderRadius: '10px'
                     }}
                 >
+                    
                     <form onSubmit={handleSubmit} style={{ width: '100%' }}>
                         <Stack spacing={2} sx={{ width: '100%', maxWidth: '500px' }}>
                             <Typography marginTop="5px" variant="h6" gutterBottom>
@@ -81,7 +100,8 @@ const Login = () => {
                             </Typography>
 
                             <TextField
-                                required
+                                
+                                id="login-input"
                                 label="Email"
                                 variant="filled"
                                 value={email}
@@ -90,7 +110,8 @@ const Login = () => {
                                 fullWidth
                             />
                             <TextField
-                                required
+                                
+                                id="password-input"
                                 label="Password"
                                 variant="filled"
                                 type="password"
@@ -99,17 +120,19 @@ const Login = () => {
                                 onChange={handlePassword}
                                 fullWidth
                             />
-                            {error && <Typography color="error">Invalid user name or password</Typography>} {/* Display error message */}
+                            {inputRequired && <Typography id="input-required" color="error">{inputRequired}</Typography>}
+                            {error && <Typography id="error-output" color="error">Invalid user name or password</Typography>} {/* Display error message */}
 
                             {loading ? (
                                 <LinearProgress style={{ borderRadius: '0 0 4px 4px' }} />
                             ) : (
-                                <Button variant="contained" type="submit">
+                                <Button id="login-button" variant="contained" type="submit">
                                     Sign in
                                 </Button>
                             )}
                         </Stack>
                     </form>
+                    
                 </Box>
             </Container>
         </Box>
