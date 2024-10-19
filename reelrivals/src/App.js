@@ -4,11 +4,13 @@ import Home from "./scenes/home";
 import Navbar from "./components/navbar";
 import Signup from "./scenes/signup";
 import Login from "./scenes/login";
+import Dashboard from "./scenes/dashboard";
 
 
 import { createTheme, themeProvider} from "@mui/material/styles";
 import { ThemeProvider } from "@emotion/react";
 import CssBaseline from '@mui/material/CssBaseline';
+
 
 
 
@@ -32,6 +34,7 @@ function App() {
         <Route path="/" element={<Home/>}/>
         <Route path="/signup" element={<Signup/>}/>
         <Route path="/login" element={<Login/>}/>
+        <Route path="/dashboard" element={<Dashboard/>}/>
         
 
       
