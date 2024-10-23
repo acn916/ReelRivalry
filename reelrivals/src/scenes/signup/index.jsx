@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, TextField, Button } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -6,6 +6,9 @@ import LinearProgress from '@mui/material/LinearProgress';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { app } from '../../firebaseConfig'; // Ensure you are importing 'app' correctly
 import { useNavigate } from 'react-router-dom';
+
+import { useAuth } from '../../AuthContext';
+import axios from 'axios';
 
 const Signup = () => {
 
@@ -19,6 +22,10 @@ const Signup = () => {
     const [error, setError] = useState(""); // State to hold error messages
     const [inputRequired, setInputRequired] = useState("");
     const navigate = useNavigate()
+
+    const [userObject, setUserObject] = useState({});
+
+    const {createUser} = useAuth();
 
 
     const handleFirstName = (e) => {
@@ -97,11 +104,28 @@ const Signup = () => {
         }
 
         setLoading(true);
+
+        const userData = {
+            first_name: firstName,
+            last_name: lastName,
+            email: email
+        };
+
+        
         
 
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            await createUser(email, password, firstName, lastName);
             console.log('User created successfully:', email);
+
+            axios.post('http://localhost:5094/api/user', userData)
+                .then(response => {
+                    console.log(response);
+                })
+                .catch(error => {
+                    console.error('Error adding user data', error);
+                })
+                
             navigate('/dashboard');
         } catch (err) {
             setError(err.message);
