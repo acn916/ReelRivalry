@@ -1,32 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../AuthContext';
-import { Box, Container, Stack, Typography, Paper } from '@mui/material';
+import { Box, Container, Stack, Typography, Paper, CircularProgress } from '@mui/material';
 import axios from 'axios';
-import TournamentCard from '../../components/tournamentcard';
+import { useTournament } from '../../TournamentContext';
+import TournamentCard from './TournamentCard';
 
 const Dashboard = () => {
-  const { userId } = useAuth();
+  const { userId, loading } = useAuth();
   const [tournaments, setTournaments] = useState([]);
   const [ongoingTournaments, setOngoingTournaments] = useState([]);
   const [upcomingTournaments, setUpcomingTournaments] = useState([]);
   const [previousTournaments, setPreviousTournaments] = useState([]);
+  const { isUpdated, setIsUpdated } = useTournament();
+  const [dashLoading, setDashLoading] = useState(false);
+
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+  
+
+  const fetchTournaments = async () => {
+    if (userId) {
+      setDashLoading(true);
+      try {
+        const response = await axios.get(`${apiBaseUrl}/tournament/all-tournaments/${userId}`);
+
+        const _tournaments = response.data;
+        _tournaments.sort((a,b) => b.startDateTime - a.startDateTime);
+        setTournaments(_tournaments);
+
+        setOngoingTournaments(_tournaments.filter(tournament => tournament.status === "Ongoing").sort((a, b) => new Date(b.startDateTime) - new Date(a.startDateTime)));
+        setUpcomingTournaments(_tournaments.filter(t => t.status === "Upcoming").sort((a, b) => new Date(b.startDateTime) - new Date(a.startDateTime)));
+        setPreviousTournaments(_tournaments.filter(prevTournament => prevTournament.status === "Previous").sort((a, b) => new Date(b.startDateTime) - new Date(a.startDateTime)));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setDashLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    if (userId) {
-      axios.get(`http://localhost:5094/api/tournament/user/${userId}`)
-        .then(response => {
-          setTournaments(response.data);
-          setOngoingTournaments(response.data.filter(tournament => tournament.status === "Ongoing"));
-          setUpcomingTournaments(response.data.filter(t => t.status === "Upcoming"));
-          setPreviousTournaments(response.data.filter(prevTournament => prevTournament.status === "Previous"));
-        })
-        .catch(error => {
-          console.error(error);
-        });
+    if (!loading && userId) {
+      fetchTournaments();
+      if (isUpdated) {
+        setIsUpdated(false);
+      }
     }
-  }, [userId]);
+    const interval = setInterval(() => {
+      if (userId) fetchTournaments();
+    }, 1 * 60 * 1000); // 1-minute interval
 
-  
+    return () => clearInterval(interval);
+  }, [loading, userId, isUpdated]);
+
   return (
     <Box
       sx={{
@@ -44,84 +69,56 @@ const Dashboard = () => {
           alignItems: 'flex-start',
         }}
       >
-        <Stack
-          spacing={2}
-          sx={{
-            marginTop: '40px',
-            width: '100%',
-            backgroundColor: 'secondary.main'
-          }}
-        >
-          {['Ongoing Tournaments', 'Upcoming Tournaments', 'Previous Tournaments'].map((section, index) => (
-            <Paper key={index} elevation={3} sx={{ padding: '16px', backgroundColor: 'third.main'}}>
-              <Typography variant="h8">{section}</Typography>
-              <Box
-                sx={{
-                  justifyContent: 'center',
-                  alignContent: 'center',
-                  margin: '20px',
-                  
-                }}
-              >
-                {section === "Ongoing Tournaments" && (
-                  ongoingTournaments.length > 0 ? (
-                    ongoingTournaments.map(t => (
-                      <TournamentCard
-                        id="onoing-tournament"
-                        key={t.id}
-                        userId={t.id}
-                        name={t.name}
-                        date={t.date}
-                        duration={t.duration}
-                        species={t.species}
-                      />
-                    ))
-                  ): 
-                  (
-                    <Typography variant="h8">No tournaments found</Typography>
-                  ))}
-
-                {section === "Upcoming Tournaments" && (
-                  upcomingTournaments.length > 0 ? (
-                    upcomingTournaments.map(t => (
-                      <TournamentCard
-                        id="upcoming-tournament"
-                        key={t.id}
-                        userId={t.id}
-                        name={t.name}
-                        date={t.date}
-                        duration={t.duration}
-                        species={t.species}
-                      />
-                    ))
-                  ): 
-                  (
-                    <Typography variant="h8">No tournaments found</Typography>
-                  ))}
-                {section === 'Previous Tournaments' && (
-                  previousTournaments.length > 0 ? (
-                    previousTournaments.map(t => (
-                      <TournamentCard
-                        id="previous-tournament"
-                        key={t.id}
-                        userId={t.id}
-                        name={t.name}
-                        date={t.date}
-                        duration={t.duration}
-                        species={t.species}
-                      />
-                    ))
-                  ):
-                  (
-                    <Typography variant="h8">No tournaments found</Typography>
-                  )
-                )}
+       
+           <Stack
+            spacing={2}
+            sx={{
+              marginTop: '40px',
+              width: '100%',
+              backgroundColor: 'primary.main'
+            }}
+          >
+            {['Ongoing Tournaments', 'Upcoming Tournaments', 'Previous Tournaments'].map((section, index) => (
+              <Paper id={`section-${section.replace(" ", "-").toLowerCase()}`} key={index} elevation={3} sx={{ padding: '16px', backgroundColor: 'third.main'}}>
+                <Typography variant="h8" fontWeight='bold'>{section}</Typography>
+                <Box sx={{ justifyContent: 'center', alignContent: 'center', margin: '20px' }}>
+                  {section === "Ongoing Tournaments" && (
 
 
-              </Box>
-            </Paper>
-          ))}
-        </Stack>
+                   
+                      <TournamentCard
+                        id={"ongoing-tournaments"}
+                        tournaments={ongoingTournaments}
+                        setTournaments={setOngoingTournaments}
+                        loading={loading}
+                        dashLoading={dashLoading}
+                      />
+                    
+                    
+                  )}
+                  {section === "Upcoming Tournaments" && (
+                    <TournamentCard
+                      id={"upcoming-tournaments"}
+                      tournaments={upcomingTournaments}
+                      setTournaments={setUpcomingTournaments}
+                      loading={loading}
+                      dashLoading={dashLoading}
+                    />
+                  )}
+                  {section === 'Previous Tournaments' && (
+                    <TournamentCard
+                      id={"previous-tournaments"}
+                      tournaments={previousTournaments}
+                      setTournaments={setPreviousTournaments}
+                      loading={loading}
+                      dashLoading={dashLoading}
+                    />
+                  )}
+                </Box>
+              </Paper>
+            ))}
+          </Stack>
+       
       </Container>
     </Box>
   );

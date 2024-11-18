@@ -6,7 +6,6 @@ import LinearProgress from '@mui/material/LinearProgress';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { app } from '../../firebaseConfig'; // Ensure you are importing 'app' correctly
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 import { useAuth } from '../../AuthContext.js'
 
@@ -51,7 +50,7 @@ const Login = () => {
 
             // login user with firebase [email, password]
             await authenticate(email, password);
-            console.log('User logged in:', email);
+            //console.log('User logged in:', email);
             navigate('/dashboard')
             
         } catch (err) {

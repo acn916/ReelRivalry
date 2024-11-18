@@ -21,11 +21,11 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(""); // State to hold error messages
     const [inputRequired, setInputRequired] = useState("");
-    const navigate = useNavigate()
-
-    const [userObject, setUserObject] = useState({});
+    const navigate = useNavigate();
 
     const {createUser} = useAuth();
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+
 
 
     const handleFirstName = (e) => {
@@ -116,9 +116,9 @@ const Signup = () => {
 
         try {
             await createUser(email, password, firstName, lastName);
-            console.log('User created successfully:', email);
+            //console.log('User created successfully:', email);
 
-            axios.post('http://localhost:5094/api/user', userData)
+            await axios.post(`${apiBaseUrl}/user`, userData)
                 .then(response => {
                     console.log(response);
                 })
@@ -126,7 +126,7 @@ const Signup = () => {
                     console.error('Error adding user data', error);
                 })
                 
-            navigate('/dashboard');
+            navigate('/login');
         } catch (err) {
             setError(err.message);
             console.error(err.message);

@@ -10,24 +10,29 @@ export const AuthProvider = ({children}) => {
     const [userEmail, setUserEmail] = useState("");
     const [userFirstName, setUserFirstName] = useState("");
     const [userLastName, setUserLastName] = useState("");
-    const [userId, setUserId] = useState();
+    const [userId, setUserId] = useState(null);
     const [loading, setLoading] = useState(true);
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
     const setUserData = async (email) =>{
-        const userResponse = await axios.get(`http://localhost:5094/api/user/email/${email}`);
-        const userData = userResponse.data;
-        
-        // set user data to context
-        setUserEmail(userData.email);
-        setUserFirstName(userData.first_name);
-        setUserLastName(userData.last_name);
-        setUserId(userData.id);
-
+        if(!email) return;
+        try{
+            const userResponse = await axios.get(`${apiBaseUrl}/user/email/${email}`);
+            const userData = userResponse.data;
+              // set user data to context
+            setUserEmail(userData.email);
+            setUserFirstName(userData.first_name);
+            setUserLastName(userData.last_name);
+            setUserId(userData.id);
+        } catch (error) {
+            console.error(error);
+        } 
     }
 
     useEffect(() => {
         const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, (user) => {
+            
             if (user) {
                 setCurrentUser(user);
                 const email = user.email;
@@ -56,6 +61,10 @@ export const AuthProvider = ({children}) => {
         const auth = getAuth();
         signOut(auth).then(() => {
             setCurrentUser(null);
+            setUserFirstName("");
+            setUserLastName("");
+            setUserEmail("");
+            setUserId(null);
             console.log("Successfully logged out ",userEmail );
         }).catch((error) => {
             console.error("Error during sign-out", error);
@@ -86,6 +95,7 @@ export const AuthProvider = ({children}) => {
         userFirstName,
         userLastName,
         userId,
+        loading,
         setUserId,
         setUserFirstName,
         setUserLastName,
@@ -93,6 +103,7 @@ export const AuthProvider = ({children}) => {
         createUser,
         authenticate,
         logout,
+        setLoading,
     }
 
     return(

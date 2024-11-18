@@ -1,24 +1,31 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, MenuItem, Typography, Menu, IconButton, Avatar, Button } from '@mui/material';
+import { Box, MenuItem, Typography, Menu, IconButton, Avatar, Button, useMediaQuery, CircularProgress } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import Undo from '@mui/icons-material/Undo';
 import MenuIcon from '@mui/icons-material/Menu';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useAuth } from '../../AuthContext';
+import axios from 'axios';
+import NotificationsDropDown from './NotificationsDropDown';
+import { useTournament } from '../../TournamentContext';
 
 function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
-
-    const {logout} = useAuth();
+    const isMobile = useMediaQuery('(max-width:600px)');
+    const {logout, userId} = useAuth();
+    const [invitations, setInvitations] = useState([]);
     
     // State for handling menu open/close
     const [anchorEl, setAnchorEl] = useState(null);
     const [avatarAnchorEl, setAvatarAnchorEl] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const {setTournaments, setIsUpdated} = useTournament();
 
     const avatarOpen = Boolean(avatarAnchorEl);
     const open = Boolean(anchorEl);
+
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
     // Function to open menu
     const handleMenuOpen = (event) => {
@@ -33,29 +40,96 @@ function Navbar() {
     const handleAvatarOpen = (event) => {
         setAvatarAnchorEl(event.currentTarget);
     };
+    
 
     const handleAvatarClose = () => {
         setAvatarAnchorEl(null);
     }
 
+  
     const handleSignOut = () => {
         logout();
     }
 
-    const titleClick = () =>{
-        navigate('/dashboard');
+
+    const handleUndoClick = () => {
+        navigate('/');
     }
 
-    // Handlers for navigation
-    const loginClick = () => {
+    const handleLoginClick = () => {
         navigate('/login');
-    };
-
-    const undoClick = () => {
-        navigate('/');
+    }
+    const handleTitleClick = () => {
+        navigate('/dashboard');
     };
 
     const isAuthPage = location.pathname === '/' || location.pathname === '/login';
+
+
+
+    const handleRetrieveInvitations = async (userId) => {
+
+        setLoading(true);
+        
+        try{
+            const response = await axios.get(`${apiBaseUrl}/invitation/user/${userId}`);
+            setInvitations(response.data);
+
+        } catch (error) {
+            console.error(error, "Error retrieving invitations");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAcceptInvitation = async (index) => {
+        const data = {
+            "userId": userId,
+            "tournamentId": invitations[index].tournamentId
+        }
+        try{
+            await axios.post(`${apiBaseUrl}/participant`, data);
+            const tourneyResponse = await axios.get(`${apiBaseUrl}/tournament/${invitations[index].tournamentId}`)
+            const tourneyData = tourneyResponse.data
+            const tourney = {
+                "id": tourneyData.id,
+                "name": tourneyData.name,
+                "date": tourneyData.date,
+                "startTime": tourneyData.startTime,
+                "endTime": tourneyData.endTime,
+                "duration": tourneyData.duration,
+                "startDateTime": tourneyData.startDateTime,
+                "endDateTime": tourneyData.endDateTime,
+                "species": tourneyData.species,
+                "status": tourneyData.status,
+                "userId": tourneyData.userId,
+            }
+            setTournaments((prevTournaments) => [...prevTournaments, tourney]);
+            setIsUpdated(true);
+
+            handleDeleteInvitations(index);
+
+        } catch (error) {
+            console.error(error, "Error accepting invitation");
+        }
+    }
+
+    const handleDeleteInvitations = async (index) => {
+        try{
+            await axios.delete(`${apiBaseUrl}/invitation/${invitations[index].id}`)
+            setInvitations((prev) => prev.filter((p) => p.id !== invitations[index].id));
+
+        } catch (error) {
+            console.error(error, "Error deleting invitation");
+        }
+    }
+
+    useEffect(() => {
+        if(userId){
+            handleRetrieveInvitations(userId);
+        }
+        
+    }, [userId]);
 
     return (
         <Box
@@ -63,78 +137,139 @@ function Navbar() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                p: 2,
-                backgroundColor: 'secondary.main',
+                width: '100vw', 
+                backgroundColor: '#dbdbd9'
             }}
         >
 
-            {location.pathname === '/login' && (
-                
-                <IconButton id="return-button" onClick={undoClick}>
-                    <Undo />
-                </IconButton>
-                
-            )}
             
+                {/* Menu Icon */}
+            <Box
+                sx={{
+                    
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    ml: isMobile ? 0 : 5
 
-            {!isAuthPage && (
-                <>
-                    {/* Menu icon with dropdown menu */}
-                    <IconButton id="menu-button" onClick={handleMenuOpen}>
-                        <MenuIcon />
-                    </IconButton>
+                }}
+            >
 
-                    {/* Menu for dropdown */}
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleMenuClose}
-                    >
-                        <MenuItem id="my-tournament-option" onClick={() => { navigate('/my-tournaments'); handleMenuClose(); }}>My Tournaments</MenuItem>
-                        <MenuItem id="create-tournament-option"onClick={() => { navigate('/create-tournaments'); handleMenuClose(); }}>Create Tournaments</MenuItem>
-                        <MenuItem id="settings-option"onClick={() => { navigate('/settings'); handleMenuClose(); }}>Settings</MenuItem>
-                    </Menu>
-                </>
-            )}
+                {!isAuthPage ? (
+                    <Box>
+                        <IconButton id="menu-button" onClick={handleMenuOpen}>
+                            <MenuIcon />
+                        </IconButton>
+                        <Menu
+                                anchorEl={anchorEl}
+                                open={open}
+                                onClose={handleMenuClose}
+                            >
+                                <MenuItem id="my-tournament-option" onClick={() => { navigate('/my-tournaments'); handleMenuClose(); }}>My Tournaments</MenuItem>
+                                <MenuItem id="create-tournament-option"onClick={() => { navigate('/create-tournament'); handleMenuClose();}}>Create Tournament</MenuItem>
+                        </Menu>
+                    </Box>
+                    
+                ):(
+                    <Box>
+                        <IconButton onClick={handleUndoClick}>
+                            <Undo/>
+                        </IconButton>
+                    </Box>
+                )}
+                
 
-            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            </Box>
+            {/* WEBSITE TITLE */}
+            <Box
+                sx={{
+                    width: '100%',
+                    textAlign: 'center',
 
-                <Button id="title-button" onClick={titleClick}>
-                    <Typography variant='h4' align='center'>
-                        ReelRivals
+                }}
+            >
+                <Button onClick={handleTitleClick}>
+                    <Typography fontFamily="'Nosifer', sans-serif" color="black" variant="h5" align="center" 
+                    sx={{
+                        ml:{xs: '30px', lg:'50px'}
+                    }}>
+                        ReelRivalry
                     </Typography>
                 </Button>
                 
             </Box>
+            {/* NOTIFICATIONS AND AVATAR */}
 
-            {!isAuthPage && (
-                <>
-                    {/* still need to implement notifcations */}
-                    <IconButton id="notification-button">
-                        <NotificationsIcon />
-                    </IconButton>
-
-                    
-                    <IconButton id="avatar-icon-button"onClick={handleAvatarOpen}>
-                        <Avatar sx={{ width: 24, height: 24 }} />
-                    </IconButton>
-                    <Menu
-                        anchorEl={avatarAnchorEl}
-                        open={avatarOpen}
-                        onClose={handleAvatarClose}
+            <Box
+                sx={{
+                    mr: !isMobile ? 2 : 0
+                }}
+            >
+                {!isAuthPage &&
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: isMobile ? 0 : 2,
+                        }}
                     >
-                        <MenuItem id="sign-out-option" onClick={() => {handleAvatarClose(); handleSignOut(); navigate('/login') }}>Sign Out</MenuItem>
-                        
-                    </Menu>
-                    
-                </>
-            )}
 
-            {location.pathname === '/' && (
-                <IconButton id="login-button" onClick={loginClick}>
-                    <LoginIcon />
-                </IconButton>
-            )}
+                        <Box>
+                            <NotificationsDropDown 
+                                invitations={invitations}
+                                handleAcceptInvitation={handleAcceptInvitation}
+                                handleDeleteInvitation={handleDeleteInvitations}
+                            />
+                        </Box>
+                        
+
+                        <Box
+                        >
+                            {!loading ? (
+                                <IconButton id="avatar-icon" onClick={handleAvatarOpen}>
+                                    <Avatar sx={{width: '24px', height: '24px'}}/>
+                                </IconButton>
+                            ):(
+                                <CircularProgress/>
+                            )}
+                            
+
+                            <Menu
+                                anchorEl={avatarAnchorEl}
+                                open={avatarOpen}
+                                onClose={handleAvatarClose}
+                                id="right-menu"
+                            >
+                                <MenuItem id="user-option" onClick={() => {handleAvatarClose(); navigate('/profile')}}>Profile</MenuItem>
+                                <MenuItem id="sign-out-option" onClick={() => {handleAvatarClose(); handleSignOut(); navigate('/login') }}>Sign Out</MenuItem>
+                                
+                            </Menu>
+                            
+                        </Box>
+                    </Box>
+                }
+            </Box>
+            
+            <Box
+                 sx={{
+                    
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    mr: isMobile ? 0 : 5
+
+                }}
+            >
+                {isAuthPage &&
+                    <Box
+                        
+                    >
+                        <IconButton onClick={handleLoginClick}>
+                            <LoginIcon/>
+                        </IconButton>
+                    </Box>
+                }   
+
+            </Box>
+                  
         </Box>
     )
 }
