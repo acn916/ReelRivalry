@@ -136,7 +136,7 @@ const NotificationsDropDown = ({invitations, handleAcceptInvitation, handleDelet
                                         }}
                                     >
                                         
-                                        <Typography>Date: {dayjs(invitation.startDateTime).format('MM-DD-YYYY')}</Typography>
+                                        <Typography>Date: {dayjs.utc(invitation.startDateTime).local().format('MM-DD-YYYY')}</Typography>
                                         <Box
                                             sx={{
                                                 display: 'flex',
@@ -144,8 +144,8 @@ const NotificationsDropDown = ({invitations, handleAcceptInvitation, handleDelet
                                                 gap: 2
                                             }}
                                         >
-                                            <Typography>Start: {dayjs(invitation.startDateTime).format("h:mm A")}</Typography>
-                                            <Typography>End: {dayjs(invitation.endDateTime).format("h:mm A")}</Typography>
+                                            <Typography>Start: {dayjs.utc(invitation.startDateTime).local().format("h:mm A")}</Typography>
+                                            <Typography>End: {dayjs.utc(invitation.endDateTime).local().format("h:mm A")}</Typography>
 
                                         </Box>
                                     </Box>
