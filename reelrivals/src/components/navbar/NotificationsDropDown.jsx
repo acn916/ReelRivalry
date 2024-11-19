@@ -47,6 +47,7 @@ const NotificationsDropDown = ({invitations, handleAcceptInvitation, handleDelet
             {invitations.length > 0 ? (
                 <IconButton onClick={toggleDropdown}>
                     <NotificationsActiveIcon 
+                        fontSize="medium"
                         sx={{
                             color:"#f23a46",
                             animation: `${bounce} 0.6s infinite`,
@@ -54,7 +55,7 @@ const NotificationsDropDown = ({invitations, handleAcceptInvitation, handleDelet
                 </IconButton>
             ):(
                 <IconButton onClick={toggleDropdown}>
-                    <NotificationsIcon/>
+                    <NotificationsIcon fontSize='medium' sx={{mt:1}}/>
                 </IconButton>
             )}
             

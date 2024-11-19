@@ -20,7 +20,6 @@ export const AuthProvider = ({children}) => {
         try{
             const userResponse = await axios.get(`${apiBaseUrl}/user/email/${email}`);
             const userData = userResponse.data;
-            console.log(userData)
             setUserEmail(userData.email);
             setUserFirstName(userData.first_name);
             setUserLastName(userData.last_name);

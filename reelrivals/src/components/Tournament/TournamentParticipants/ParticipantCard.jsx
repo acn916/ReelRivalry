@@ -17,7 +17,8 @@ import {
     DialogActions,
     Button,
     TextField,
-    Box
+    Box,
+    Avatar
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -28,7 +29,7 @@ import axios from 'axios';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const ParticipantCard = ({ RetrieveParticipants, ownerId, participants, handleDeleteParticipant, endDateTime }) => {
-    const { userId } = useAuth();
+    const { userId, userPicture } = useAuth();
     const [open, setOpen] = useState(false);
     const [pictureOpen, setPictureOpen] = useState(false);
     const [desktopPictureOpen, setDesktopPictureOpen] = useState(false);
@@ -56,6 +57,7 @@ const ParticipantCard = ({ RetrieveParticipants, ownerId, participants, handleDe
         handleClose();
     };
 
+    console.log(participants)
     const handleDeleteFish = async () =>{
         try{
             const response = await axios.delete(`${apiBaseUrl}/fish/${fishId}`)
@@ -167,7 +169,19 @@ const ParticipantCard = ({ RetrieveParticipants, ownerId, participants, handleDe
 
                                     }
                                     <TableCell align='center'>#{participantIndex + 1}</TableCell>
-                                    <TableCell align='center'>{`${participant.userFirstName} ${participant.userLastName}`}</TableCell>
+                                    <TableCell align='center'> 
+                                        
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                flexDirection: 'column',
+                                            }}
+                                        >
+                                            <Box sx={{display: 'flex', justifyContent: 'center'}}><Avatar src={participant.userPicture} alt={`${participant.userFirstName} ${participant.userLastName}`}/></Box>
+                                            <Typography textAlign="center">{`${participant.userFirstName} ${participant.userLastName}`}</Typography>
+                                        </Box>
+                                    </TableCell>
                                     
                                     {[...Array(5)].map((_, fishIndex) => (
                                         <TableCell 

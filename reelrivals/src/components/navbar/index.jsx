@@ -13,7 +13,7 @@ function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
     const isMobile = useMediaQuery('(max-width:600px)');
-    const {logout, userId} = useAuth();
+    const {logout, userId, userPicture} = useAuth();
     const [invitations, setInvitations] = useState([]);
     
     // State for handling menu open/close
@@ -226,7 +226,7 @@ function Navbar() {
                         >
                             {!loading ? (
                                 <IconButton id="avatar-icon" onClick={handleAvatarOpen}>
-                                    <Avatar sx={{width: '24px', height: '24px'}}/>
+                                    <Avatar src={userPicture} alt="Profile" sx={{width: '36px', height: '36px'}}/>
                                 </IconButton>
                             ):(
                                 <CircularProgress/>
