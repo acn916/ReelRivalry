@@ -12,6 +12,7 @@ export const AuthProvider = ({children}) => {
     const [userLastName, setUserLastName] = useState("");
     const [userId, setUserId] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [userPicture, setUserPicture] = useState("");
     const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
     const setUserData = async (email) =>{
@@ -19,11 +20,12 @@ export const AuthProvider = ({children}) => {
         try{
             const userResponse = await axios.get(`${apiBaseUrl}/user/email/${email}`);
             const userData = userResponse.data;
-              // set user data to context
+            console.log(userData)
             setUserEmail(userData.email);
             setUserFirstName(userData.first_name);
             setUserLastName(userData.last_name);
             setUserId(userData.id);
+            setUserPicture(userData.picture);
         } catch (error) {
             console.error(error);
         } 
@@ -96,6 +98,8 @@ export const AuthProvider = ({children}) => {
         userLastName,
         userId,
         loading,
+        userPicture,
+        setUserPicture,
         setUserId,
         setUserFirstName,
         setUserLastName,

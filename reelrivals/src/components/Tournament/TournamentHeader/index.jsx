@@ -67,7 +67,7 @@ const TournamentHeader = ({ name, status, tournamentId, retrieveParticipants, sh
             const url = await getDownloadURL(storageRef);
             setImageUrl(url); // Save the image URL to state
 
-            const todaysDate = date.format("YYYY-MM-DD");
+            const todaysDate = date.utc().format("YYYY-MM-DD");
             const length = parseFloat(fishLength);
             const catchData = {
                 "length": length,
