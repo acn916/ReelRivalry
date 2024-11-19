@@ -57,11 +57,11 @@ const ParticipantCard = ({ RetrieveParticipants, ownerId, participants, handleDe
         handleClose();
     };
 
-    console.log(participants)
+   // console.log(participants)
     const handleDeleteFish = async () =>{
         try{
             const response = await axios.delete(`${apiBaseUrl}/fish/${fishId}`)
-            console.log(response)
+            //console.log(response)
             RetrieveParticipants();
 
         } catch (error) {
@@ -87,7 +87,7 @@ const ParticipantCard = ({ RetrieveParticipants, ownerId, participants, handleDe
 
             RetrieveParticipants();
 
-            console.log(response);
+           // console.log(response);
         } catch (error) {
             console.error(error, "Failed updating fish length");
         }
